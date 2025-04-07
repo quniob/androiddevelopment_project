@@ -6,11 +6,27 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.navigation.NavDestination.Companion.hierarchy
+import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
+import com.example.androiddevelopment_project.navigation.AppNavGraph
+import com.example.androiddevelopment_project.navigation.Screen
+import com.example.androiddevelopment_project.navigation.bottomNavItems
 import com.example.androiddevelopment_project.ui.theme.AndroidDevelopment_ProjectTheme
 
 class MainActivity : ComponentActivity() {
@@ -19,29 +35,72 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             AndroidDevelopment_ProjectTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
-                }
+                MovieApp()
             }
         }
     }
 }
 
+/**
+ * Основной контейнер приложения
+ */
 @Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    AndroidDevelopment_ProjectTheme {
-        Greeting("Android")
+fun MovieApp() {
+    val navController = rememberNavController()
+    
+    Surface(
+        modifier = Modifier.fillMaxSize(),
+        color = MaterialTheme.colorScheme.background
+    ) {
+        Scaffold(
+            bottomBar = {
+                val navBackStackEntry by navController.currentBackStackEntryAsState()
+                val currentDestination = navBackStackEntry?.destination
+                
+                // Отображаем нижнюю навигацию только на главных экранах, а не на экране деталей
+                val showBottomBar = when (currentDestination?.route) {
+                    Screen.Home.route, Screen.Search.route, Screen.Profile.route -> true
+                    else -> false
+                }
+                
+                if (showBottomBar) {
+                    NavigationBar {
+                        bottomNavItems.forEach { item ->
+                            val selected = currentDestination?.hierarchy?.any { it.route == item.route } == true
+                            
+                            NavigationBarItem(
+                                selected = selected,
+                                onClick = {
+                                    navController.navigate(item.route) {
+                                        // Избегаем множества копий одного и того же экрана в стеке навигации
+                                        popUpTo(navController.graph.findStartDestination().id) {
+                                            saveState = true
+                                        }
+                                        // Восстанавливаем состояние экрана, если возвращаемся на него
+                                        launchSingleTop = true
+                                        restoreState = true
+                                    }
+                                },
+                                icon = {
+                                    val icon = when (item.icon) {
+                                        "home" -> Icons.Default.Home
+                                        "search" -> Icons.Default.Search
+                                        "person" -> Icons.Default.Person
+                                        else -> Icons.Default.Home
+                                    }
+                                    Icon(icon, contentDescription = item.label)
+                                },
+                                label = { Text(item.label) }
+                            )
+                        }
+                    }
+                }
+            }
+        ) { paddingValues ->
+            AppNavGraph(
+                navController = navController,
+                modifier = Modifier.padding(paddingValues)
+            )
+        }
     }
 }
