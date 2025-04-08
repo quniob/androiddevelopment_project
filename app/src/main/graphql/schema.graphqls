@@ -1,0 +1,84 @@
+type Query {
+  title(id: ID!): Title
+  titles(ids: [String!]!): [Title!]
+  name(id: ID!): Name
+  names(ids: [String!]!): [Name!]
+}
+
+type Title {
+  id: ID!
+  type: String!
+  is_adult: Boolean!
+  primary_title: String!
+  original_title: String
+  start_year: Int
+  end_year: Int
+  runtime_minutes: Int
+  plot: String
+  rating: Rating
+  certificates(first: Int = 3): [Certificate!]
+  critic_review: CriticReview
+  genres: [String!]
+  spoken_languages: [Language!]
+  origin_countries: [Country!]
+  posters(first: Int = 1): [Poster!]
+  credits(first: Int = 10, categories: [String!]): [Credit!]
+}
+
+type Rating {
+  aggregate_rating: Float!
+  votes_count: Int!
+}
+
+type Certificate {
+  country: Country!
+  rating: String!
+}
+
+type CriticReview {
+  score: Int!
+  review_count: Int!
+}
+
+type Country {
+  code: String!
+  name: String!
+}
+
+type Language {
+  code: String!
+  name: String!
+}
+
+type Poster {
+  url: String!
+  width: Int!
+  height: Int!
+  language_code: String
+}
+
+type Credit {
+  name: Name
+  category: String!
+  characters: [String!]
+  episodes_count: Int
+}
+
+type Name {
+  id: ID!
+  display_name: String!
+  alternate_names: [String!]
+  birth_year: Int
+  birth_location: String
+  death_year: Int
+  death_location: String
+  dead_reason: String
+  avatars(first: Int = 1): [Avatar!]
+  known_for(first: Int = 3): [Title!]
+}
+
+type Avatar {
+  url: String!
+  width: Int!
+  height: Int!
+} 

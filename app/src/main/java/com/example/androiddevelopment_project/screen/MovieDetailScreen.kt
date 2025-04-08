@@ -44,16 +44,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
-import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.example.androiddevelopment_project.viewmodel.MovieViewModel
+import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MovieDetailScreen(
     movieId: String,
     onBackClick: () -> Unit,
-    viewModel: MovieViewModel = viewModel()
+    viewModel: MovieViewModel = org.koin.androidx.compose.koinViewModel()
 ) {
     val selectedMovie by viewModel.selectedMovie.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()

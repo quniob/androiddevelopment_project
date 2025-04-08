@@ -1,0 +1,51 @@
+query GetMovieById($id: ID!) {
+  title(id: $id) {
+    id
+    primary_title
+    original_title
+    start_year
+    runtime_minutes
+    plot
+    genres
+    rating {
+      aggregate_rating
+      votes_count
+    }
+    posters(first: 1) {
+      url
+      width
+      height
+    }
+    credits(first: 10, categories: ["director", "actor", "actress"]) {
+      name {
+        display_name
+      }
+      category
+    }
+    spoken_languages {
+      name
+    }
+    origin_countries {
+      name
+    }
+    critic_review {
+      score
+      review_count
+    }
+  }
+}
+
+query GetPopularMovies($ids: [String!]!) {
+  titles(ids: $ids) {
+    id
+    primary_title
+    start_year
+    genres
+    rating {
+      aggregate_rating
+    }
+    posters(first: 1) {
+      url
+    }
+  }
+} 

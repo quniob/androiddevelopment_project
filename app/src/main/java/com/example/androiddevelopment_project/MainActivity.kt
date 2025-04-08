@@ -41,9 +41,6 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-/**
- * Основной контейнер приложения
- */
 @Composable
 fun MovieApp() {
     val navController = rememberNavController()
@@ -57,7 +54,6 @@ fun MovieApp() {
                 val navBackStackEntry by navController.currentBackStackEntryAsState()
                 val currentDestination = navBackStackEntry?.destination
                 
-                // Отображаем нижнюю навигацию только на главных экранах, а не на экране деталей
                 val showBottomBar = when (currentDestination?.route) {
                     Screen.Home.route, Screen.Search.route, Screen.Profile.route -> true
                     else -> false
@@ -72,11 +68,9 @@ fun MovieApp() {
                                 selected = selected,
                                 onClick = {
                                     navController.navigate(item.route) {
-                                        // Избегаем множества копий одного и того же экрана в стеке навигации
                                         popUpTo(navController.graph.findStartDestination().id) {
                                             saveState = true
                                         }
-                                        // Восстанавливаем состояние экрана, если возвращаемся на него
                                         launchSingleTop = true
                                         restoreState = true
                                     }

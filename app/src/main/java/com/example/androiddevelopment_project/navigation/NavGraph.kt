@@ -64,7 +64,11 @@ fun AppNavGraph(
         }
         
         composable(Screen.Search.route) {
-            SearchScreen()
+            SearchScreen(
+                onMovieClick = { movieId ->
+                    navController.navigate(Screen.MovieDetail.createRoute(movieId))
+                }
+            )
         }
         
         composable(Screen.Profile.route) {
