@@ -25,7 +25,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import org.koin.androidx.compose.koinViewModel
 import coil.compose.AsyncImage
 import com.example.androiddevelopment_project.model.Movie
 import com.example.androiddevelopment_project.viewmodel.MovieViewModel
@@ -33,7 +33,7 @@ import com.example.androiddevelopment_project.viewmodel.MovieViewModel
 @Composable
 fun HomeScreen(
     onMovieClick: (String) -> Unit,
-    viewModel: MovieViewModel = viewModel()
+    viewModel: MovieViewModel = org.koin.androidx.compose.koinViewModel()
 ) {
     val movies by viewModel.movies.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
