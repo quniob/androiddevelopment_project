@@ -96,17 +96,14 @@ class MovieViewModel(
         val filteredMovies = _allMovies.value.filter { movie ->
             var matches = true
             
-            // Проверка жанра
             if (_filters.value.selectedGenre.isNotEmpty()) {
                 matches = matches && movie.genres.contains(_filters.value.selectedGenre)
             }
             
-            // Проверка рейтинга
             if (_filters.value.minRating > 0) {
                 matches = matches && movie.rating >= _filters.value.minRating
             }
             
-            // Проверка года выпуска
             if (_filters.value.releaseYear.isNotEmpty()) {
                 matches = matches && movie.year.toString() == _filters.value.releaseYear
             }

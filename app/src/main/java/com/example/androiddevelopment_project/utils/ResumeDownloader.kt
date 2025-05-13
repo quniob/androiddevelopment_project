@@ -7,18 +7,12 @@ import android.os.Environment
 import android.util.Log
 import android.widget.Toast
 
-/**
- * Утилитарный класс для скачивания файлов резюме
- */
 class ResumeDownloader(private val context: Context) {
     
     companion object {
         private const val TAG = "ResumeDownloader"
     }
-    
-    /**
-     * Скачивает файл резюме по URL
-     */
+
     fun downloadResume(resumeUrl: String) {
         try {
             Log.d(TAG, "Начинаем скачивание резюме: $resumeUrl")
@@ -42,16 +36,12 @@ class ResumeDownloader(private val context: Context) {
             Toast.makeText(context, "Ошибка при скачивании: ${e.message}", Toast.LENGTH_SHORT).show()
         }
     }
-    
-    /**
-     * Получает имя файла из URL
-     */
+
     private fun getFileNameFromUrl(url: String): String {
         try {
             return url.substring(url.lastIndexOf('/') + 1)
         } catch (e: Exception) {
             Log.e(TAG, "Ошибка при получении имени файла из URL: $url", e)
-            // Генерируем имя файла, если не удается получить из URL
             return "resume_${System.currentTimeMillis()}.pdf"
         }
     }

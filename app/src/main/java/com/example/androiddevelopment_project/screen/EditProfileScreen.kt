@@ -1,5 +1,6 @@
 package com.example.androiddevelopment_project.screen
 
+import android.app.TimePickerDialog
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
@@ -51,10 +52,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import coil.compose.rememberAsyncImagePainter
+import com.example.androiddevelopment_project.utils.AlarmHelper
 import com.example.androiddevelopment_project.utils.ImagePickerHelper
 import com.example.androiddevelopment_project.viewmodel.UserProfileViewModel
 import org.koin.androidx.compose.koinViewModel
 import java.io.File
+import java.util.Calendar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -63,14 +66,31 @@ fun EditProfileScreen(
     viewModel: UserProfileViewModel = koinViewModel()
 ) {
     val profileState by viewModel.editProfileState.collectAsState()
+    val timeError by viewModel.favoriteClassTimeError.collectAsState()
     val context = LocalContext.current
     val imagePickerHelper = remember { ImagePickerHelper(context) }
+    val alarmHelper = remember { AlarmHelper(context) }
     
     var showImagePickerDialog by remember { mutableStateOf(false) }
     var tempCameraUri by remember { mutableStateOf<Uri?>(null) }
     
     val hasPermissions = remember { ImagePickerHelper.hasPermissions(context) }
     var showPermissionDialog by remember { mutableStateOf(!hasPermissions) }
+    
+    val calendar = Calendar.getInstance()
+    val hour = calendar.get(Calendar.HOUR_OF_DAY)
+    val minute = calendar.get(Calendar.MINUTE)
+    
+    val timePickerDialog = TimePickerDialog(
+        context,
+        { _, selectedHour, selectedMinute ->
+            val formattedTime = String.format("%02d:%02d", selectedHour, selectedMinute)
+            viewModel.updateFavoriteClassTime(formattedTime)
+        },
+        hour,
+        minute,
+        true
+    )
     
     val galleryLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.PickVisualMedia()
@@ -197,8 +217,16 @@ fun EditProfileScreen(
                 actions = {
                     IconButton(
                         onClick = {
-                            viewModel.saveProfile()
-                            onNavigateBack()
+                            if (viewModel.isProfileValid()) {
+                                if (profileState.favoriteClassTime.isNotEmpty()) {
+                                    alarmHelper.scheduleClassAlarm(
+                                        profileState.favoriteClassTime, 
+                                        profileState.fullName.ifEmpty { "пользователя" }
+                                    )
+                                }
+                                viewModel.saveProfile()
+                                onNavigateBack()
+                            }
                         }
                     ) {
                         Icon(
@@ -294,16 +322,46 @@ fun EditProfileScreen(
                     placeholder = { Text("Например: https://example.com/resume.pdf") }
                 )
                 
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                OutlinedTextField(
+                    value = profileState.favoriteClassTime,
+                    onValueChange = { viewModel.updateFavoriteClassTime(it) },
+                    label = { Text("Время любимой пары") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    placeholder = { Text("Формат: HH:mm") },
+                    isError = timeError != null,
+                    supportingText = timeError?.let { { Text(it) } },
+                    trailingIcon = {
+                        IconButton(onClick = { timePickerDialog.show() }) {
+                            Icon(
+                                imageVector = Icons.Default.Add,
+                                contentDescription = "Выбрать время"
+                            )
+                        }
+                    }
+                )
+                
                 Spacer(modifier = Modifier.height(32.dp))
                 
                 Button(
                     onClick = {
-                        viewModel.saveProfile()
-                        onNavigateBack()
+                        if (viewModel.isProfileValid()) {
+                            if (profileState.favoriteClassTime.isNotEmpty()) {
+                                alarmHelper.scheduleClassAlarm(
+                                    profileState.favoriteClassTime, 
+                                    profileState.fullName.ifEmpty { "пользователя" }
+                                )
+                            }
+                            viewModel.saveProfile()
+                            onNavigateBack()
+                        }
                     },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(50.dp)
+                        .height(50.dp),
+                    enabled = viewModel.isProfileValid()
                 ) {
                     Text("Готово")
                 }

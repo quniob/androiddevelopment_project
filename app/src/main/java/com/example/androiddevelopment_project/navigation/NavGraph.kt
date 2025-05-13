@@ -106,7 +106,6 @@ fun AppNavGraph(
     badgeStateHolder: BadgeStateHolder = get(),
     movieViewModel: MovieViewModel = koinViewModel()
 ) {
-    // Слушаем изменения в фильтрах и обновляем состояние бейджа
     val hasActiveFilters by movieViewModel.hasActiveFilters.collectAsState(initial = false)
     badgeStateHolder.updateBadgeState(hasActiveFilters)
 
