@@ -1,7 +1,14 @@
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
-    alias(libs.plugins.kotlin.compose)
+    id 'kotlin-kapt'
     id 'com.apollographql.apollo3' version '3.8.2'
 }
 
@@ -34,6 +41,9 @@ android {
     }
     buildFeatures {
         compose true
+    }
+    composeOptions {
+        kotlinCompilerExtensionVersion '1.5.8'
     }
 }
 
@@ -70,6 +80,14 @@ dependencies {
     
     implementation 'io.insert-koin:koin-android:3.5.0'
     implementation 'io.insert-koin:koin-androidx-compose:3.5.0'
+    
+    implementation "androidx.room:room-runtime:2.6.1"
+    implementation "androidx.room:room-ktx:2.6.1"
+    kapt "androidx.room:room-compiler:2.6.1"
+    
+    implementation "org.jetbrains.kotlinx:kotlinx-metadata-jvm:0.8.0"
+    
+    implementation "androidx.datastore:datastore-preferences:1.0.0"
     
     testImplementation libs.junit
     androidTestImplementation libs.androidx.junit
