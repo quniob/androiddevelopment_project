@@ -6,11 +6,6 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -25,9 +20,12 @@ import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.androiddevelopment_project.navigation.AppNavGraph
+import com.example.androiddevelopment_project.navigation.BadgeNavIcon
 import com.example.androiddevelopment_project.navigation.Screen
 import com.example.androiddevelopment_project.navigation.bottomNavItems
+import com.example.androiddevelopment_project.ui.badge.BadgeStateHolder
 import com.example.androiddevelopment_project.ui.theme.AndroidDevelopment_ProjectTheme
+import org.koin.androidx.compose.get
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -42,7 +40,7 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun MovieApp() {
+fun MovieApp(badgeStateHolder: BadgeStateHolder = get()) {
     val navController = rememberNavController()
     
     Surface(
@@ -55,7 +53,8 @@ fun MovieApp() {
                 val currentDestination = navBackStackEntry?.destination
                 
                 val showBottomBar = when (currentDestination?.route) {
-                    Screen.Home.route, Screen.Search.route, Screen.Profile.route -> true
+                    Screen.Home.route, Screen.Search.route, 
+                    Screen.Profile.route, Screen.Favorites.route -> true
                     else -> false
                 }
                 
@@ -76,13 +75,18 @@ fun MovieApp() {
                                     }
                                 },
                                 icon = {
-                                    val icon = when (item.icon) {
-                                        "home" -> Icons.Default.Home
-                                        "search" -> Icons.Default.Search
-                                        "person" -> Icons.Default.Person
-                                        else -> Icons.Default.Home
+                                    if (item.badgeRequired && item.route == Screen.Search.route) {
+                                        BadgeNavIcon(
+                                            icon = item.icon,
+                                            badgeStateHolder = badgeStateHolder,
+                                            contentDescription = item.label
+                                        )
+                                    } else {
+                                        androidx.compose.material3.Icon(
+                                            imageVector = item.icon,
+                                            contentDescription = item.label
+                                        )
                                     }
-                                    Icon(icon, contentDescription = item.label)
                                 },
                                 label = { Text(item.label) }
                             )

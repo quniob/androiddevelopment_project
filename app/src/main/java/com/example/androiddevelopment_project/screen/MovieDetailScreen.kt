@@ -16,7 +16,9 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -35,6 +37,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -45,6 +50,8 @@ import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import coil.compose.AsyncImage
+import com.example.androiddevelopment_project.model.genreMap
+import com.example.androiddevelopment_project.viewmodel.FavoriteMovieViewModel
 import com.example.androiddevelopment_project.viewmodel.MovieViewModel
 import org.koin.androidx.compose.koinViewModel
 
@@ -53,26 +60,71 @@ import org.koin.androidx.compose.koinViewModel
 fun MovieDetailScreen(
     movieId: String,
     onBackClick: () -> Unit,
-    viewModel: MovieViewModel = org.koin.androidx.compose.koinViewModel()
+    viewModel: MovieViewModel = koinViewModel(),
+    favoriteViewModel: FavoriteMovieViewModel = koinViewModel()
 ) {
     val selectedMovie by viewModel.selectedMovie.collectAsState()
+    val favoriteMovie by favoriteViewModel.selectedMovie.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
+    val isFavoriteLoading by favoriteViewModel.isLoading.collectAsState()
     val error by viewModel.error.collectAsState()
+    val favoriteError by favoriteViewModel.error.collectAsState()
+    var isFavorite by remember { mutableStateOf(false) }
+    
+    val movieToShow = selectedMovie ?: favoriteMovie
+    val showError = error != null && favoriteError != null
+    val loading = isLoading || isFavoriteLoading
 
     LaunchedEffect(movieId) {
         viewModel.getMovieById(movieId)
+    }
+    
+    LaunchedEffect(error) {
+        if (error != null) {
+            favoriteViewModel.getMovieById(movieId)
+        }
+    }
+    
+    LaunchedEffect(movieToShow) {
+        if (movieToShow != null) {
+            favoriteViewModel.isMovieFavorite(movieId) { isFav ->
+                isFavorite = isFav
+            }
+        }
     }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(selectedMovie?.title ?: "Детали фильма") },
+                title = { Text(movieToShow?.title ?: "Детали фильма") },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(
-                            imageVector = Icons.Default.ArrowBack,
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Назад"
                         )
+                    }
+                },
+                actions = {
+                    if (movieToShow != null) {
+                        IconButton(
+                            onClick = {
+                                if (isFavorite) {
+                                    favoriteViewModel.removeMovieFromFavorites(movieId)
+                                } else {
+                                    movieToShow.let { movie ->
+                                        favoriteViewModel.addMovieToFavorites(movie)
+                                    }
+                                }
+                                isFavorite = !isFavorite
+                            }
+                        ) {
+                            Icon(
+                                imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                                contentDescription = if (isFavorite) "Удалить из избранного" else "Добавить в избранное",
+                                tint = if (isFavorite) Color.Red else MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                        }
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -89,7 +141,7 @@ fun MovieDetailScreen(
             color = MaterialTheme.colorScheme.background
         ) {
             when {
-                isLoading -> {
+                loading -> {
                     Box(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
@@ -97,20 +149,20 @@ fun MovieDetailScreen(
                         CircularProgressIndicator()
                     }
                 }
-                error != null -> {
+                showError -> {
                     Box(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = error ?: "ошибка",
+                            text = favoriteError ?: error ?: "Ошибка загрузки фильма",
                             style = MaterialTheme.typography.bodyLarge,
                             color = MaterialTheme.colorScheme.error
                         )
                     }
                 }
-                selectedMovie != null -> {
-                    val movie = selectedMovie!!
+                movieToShow != null -> {
+                    val movie = movieToShow
                     
                     Column(
                         modifier = Modifier
@@ -191,7 +243,9 @@ fun MovieDetailScreen(
                             }
                             
                             Text(
-                                text = movie.genres.joinToString(", "),
+                                text = movie.genres.joinToString(", ") { genre -> 
+                                    genreMap[genre] ?: genre 
+                                },
                                 style = MaterialTheme.typography.bodyMedium,
                                 modifier = Modifier.constrainAs(genres) {
                                     top.linkTo(rating.bottom, margin = 8.dp)
@@ -250,7 +304,7 @@ fun MovieDetailScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = "фильм не найден",
+                            text = "Фильм не найден",
                             style = MaterialTheme.typography.bodyLarge
                         )
                     }
@@ -281,7 +335,6 @@ fun InfoRow(label: String, value: String) {
         )
     }
 }
-
 
 @Composable
 fun getRatingColor(rating: Double): Color {
