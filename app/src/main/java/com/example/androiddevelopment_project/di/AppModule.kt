@@ -6,6 +6,8 @@ import com.example.androiddevelopment_project.data.network.MovieDataSource
 import com.example.androiddevelopment_project.data.preferences.FilterPreferencesManager
 import com.example.androiddevelopment_project.data.repository.FavoriteMovieRepositoryImpl
 import com.example.androiddevelopment_project.data.repository.MovieRepositoryImpl
+import com.example.androiddevelopment_project.data.repository.UserProfileRepository
+import com.example.androiddevelopment_project.data.repository.UserProfileRepositoryImpl
 import com.example.androiddevelopment_project.domain.repository.FavoriteMovieRepository
 import com.example.androiddevelopment_project.domain.repository.MovieRepository
 import com.example.androiddevelopment_project.domain.usecase.AddMovieToFavoritesUseCase
@@ -13,11 +15,14 @@ import com.example.androiddevelopment_project.domain.usecase.GetFavoriteMovieByI
 import com.example.androiddevelopment_project.domain.usecase.GetFavoriteMoviesUseCase
 import com.example.androiddevelopment_project.domain.usecase.GetMovieByIdUseCase
 import com.example.androiddevelopment_project.domain.usecase.GetPopularMoviesUseCase
+import com.example.androiddevelopment_project.domain.usecase.GetUserProfileUseCase
 import com.example.androiddevelopment_project.domain.usecase.IsMovieFavoriteUseCase
 import com.example.androiddevelopment_project.domain.usecase.RemoveMovieFromFavoritesUseCase
+import com.example.androiddevelopment_project.domain.usecase.UpdateUserProfileUseCase
 import com.example.androiddevelopment_project.ui.badge.BadgeStateHolder
 import com.example.androiddevelopment_project.viewmodel.FavoriteMovieViewModel
 import com.example.androiddevelopment_project.viewmodel.MovieViewModel
+import com.example.androiddevelopment_project.viewmodel.UserProfileViewModel
 import org.koin.android.ext.koin.androidContext
 import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.dsl.module
@@ -35,6 +40,7 @@ val appModule = module {
     
     single<MovieRepository> { MovieRepositoryImpl(movieDataSource = get()) }
     single<FavoriteMovieRepository> { FavoriteMovieRepositoryImpl(favoriteMovieDao = get()) }
+    single<UserProfileRepository> { UserProfileRepositoryImpl(context = androidContext()) }
     
     factory { GetMovieByIdUseCase(movieRepository = get()) }
     factory { GetPopularMoviesUseCase(movieRepository = get()) }
@@ -43,6 +49,8 @@ val appModule = module {
     factory { RemoveMovieFromFavoritesUseCase(favoriteMovieRepository = get()) }
     factory { IsMovieFavoriteUseCase(favoriteMovieRepository = get()) }
     factory { GetFavoriteMovieByIdUseCase(repository = get()) }
+    factory { GetUserProfileUseCase(repository = get()) }
+    factory { UpdateUserProfileUseCase(repository = get()) }
     
     viewModel { MovieViewModel(
         getMovieByIdUseCase = get(),
@@ -56,5 +64,10 @@ val appModule = module {
         removeMovieFromFavoritesUseCase = get(),
         isMovieFavoriteUseCase = get(),
         getFavoriteMovieByIdUseCase = get()
+    ) }
+    
+    viewModel { UserProfileViewModel(
+        getUserProfileUseCase = get(),
+        updateUserProfileUseCase = get()
     ) }
 } 
