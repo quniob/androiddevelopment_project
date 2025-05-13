@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.util.regex.Pattern
 
 class UserProfileViewModel(
     private val getUserProfileUseCase: GetUserProfileUseCase,
@@ -26,6 +27,9 @@ class UserProfileViewModel(
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
     
+    private val _favoriteClassTimeError = MutableStateFlow<String?>(null)
+    val favoriteClassTimeError: StateFlow<String?> = _favoriteClassTimeError.asStateFlow()
+    
     init {
         loadUserProfile()
     }
@@ -39,7 +43,6 @@ class UserProfileViewModel(
         }
     }
     
-    // Методы для экрана редактирования профиля
     fun updateFullName(fullName: String) {
         _editProfileState.update { it.copy(fullName = fullName) }
     }
@@ -56,17 +59,41 @@ class UserProfileViewModel(
         _editProfileState.update { it.copy(position = position) }
     }
     
-    // Сохранение изменений профиля
-    fun saveProfile() {
-        viewModelScope.launch {
-            _isLoading.value = true
-            updateUserProfileUseCase(_editProfileState.value)
-            _isLoading.value = false
+    fun updateFavoriteClassTime(time: String) {
+        _editProfileState.update { it.copy(favoriteClassTime = time) }
+        validateFavoriteClassTime(time)
+    }
+    
+    private fun validateFavoriteClassTime(time: String) {
+        _favoriteClassTimeError.value = if (time.isEmpty() || !isValidTimeFormat(time)) {
+            "Некорректный формат времени"
+        } else {
+            null
         }
     }
     
-    // Отмена изменений профиля
+    private fun isValidTimeFormat(time: String): Boolean {
+        val pattern = Pattern.compile("^([01]?[0-9]|2[0-3]):([0-5][0-9])$")
+        return pattern.matcher(time).matches()
+    }
+    
+    fun isProfileValid(): Boolean {
+        validateFavoriteClassTime(_editProfileState.value.favoriteClassTime)
+        return _favoriteClassTimeError.value == null
+    }
+    
+    fun saveProfile() {
+        if (isProfileValid()) {
+            viewModelScope.launch {
+                _isLoading.value = true
+                updateUserProfileUseCase(_editProfileState.value)
+                _isLoading.value = false
+            }
+        }
+    }
+    
     fun cancelEditing() {
         _editProfileState.value = _userProfile.value
+        _favoriteClassTimeError.value = null
     }
 } 

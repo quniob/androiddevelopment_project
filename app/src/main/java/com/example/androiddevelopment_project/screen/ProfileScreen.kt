@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
@@ -144,46 +145,67 @@ fun ProfileScreen(
                     
                     Spacer(modifier = Modifier.height(16.dp))
                     
-                    Text(
-                        text = profile.fullName,
-                        style = MaterialTheme.typography.headlineMedium,
-                        fontWeight = FontWeight.Bold
-                    )
+                    if (profile.fullName.isNotEmpty()) {
+                        Text(
+                            text = profile.fullName,
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                    
+                    Spacer(modifier = Modifier.height(8.dp))
                     
                     if (profile.position.isNotEmpty()) {
                         Text(
                             text = profile.position,
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            style = MaterialTheme.typography.bodyLarge
                         )
                     }
                     
-                    Spacer(modifier = Modifier.height(24.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
                     
                     if (profile.resumeUrl.isNotEmpty()) {
                         Button(
                             onClick = {
-                                // На Android 10+ (API 29+) не нужно разрешение WRITE_EXTERNAL_STORAGE для
-                                // скачивания в публичную директорию Downloads
-                                val hasWritePermission = if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P) {
-                                    ContextCompat.checkSelfPermission(
-                                        context, 
-                                        Manifest.permission.WRITE_EXTERNAL_STORAGE
-                                    ) == PackageManager.PERMISSION_GRANTED
-                                } else {
-                                    true
-                                }
-                                
-                                if (hasWritePermission) {
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU || 
+                                    ContextCompat.checkSelfPermission(context, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
                                     resumeDownloader.downloadResume(profile.resumeUrl)
                                 } else {
-                                    // Запрашиваем только разрешение на запись, если оно необходимо
-                                    requestPermissionLauncher.launch(arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE))
+                                    requestPermissionLauncher.launch(
+                                        arrayOf(
+                                            Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                                            Manifest.permission.READ_EXTERNAL_STORAGE
+                                        )
+                                    )
                                 }
                             },
-                            modifier = Modifier.fillMaxWidth(0.7f)
+                            modifier = Modifier.fillMaxWidth()
                         ) {
                             Text("Скачать резюме")
+                        }
+                    }
+                    
+                    if (profile.favoriteClassTime.isNotEmpty()) {
+                        Spacer(modifier = Modifier.height(16.dp))
+                        
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Edit,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                            
+                            Spacer(modifier = Modifier.width(8.dp))
+                            
+                            Text(
+                                text = "Время любимой пары: ${profile.favoriteClassTime}",
+                                style = MaterialTheme.typography.bodyMedium
+                            )
                         }
                     }
                 }
